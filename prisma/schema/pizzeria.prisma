@@ -5,7 +5,6 @@ model Pizzeria {
   users     User[]
   products  Product[]
   tables    Table[]
-  coupons   Coupon[]
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

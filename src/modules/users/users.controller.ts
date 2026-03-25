@@ -6,8 +6,6 @@ import {
   Delete,
   Body,
   Param,
-  HttpCode,
-  HttpStatus,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
@@ -50,7 +48,6 @@ export class UsersController {
 
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Deletar usuário' })
   async remove(@Param('id') id: string, @CurrentUser() user: User) {
     return this.service.remove(id, user);

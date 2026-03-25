@@ -14,7 +14,7 @@ import { UsersRepository } from './repository/users.repository';
 export class UsersService {
   constructor(private repository: UsersRepository) {}
 
-  async create(dto: CreateUserDto, currentUser: User): Promise<Partial<User>> {
+  async create(dto: CreateUserDto, currentUser: User) {
     if (currentUser.role === Role.SUPER_ADMIN && dto.role !== Role.ADMIN) {
       throw new ForbiddenException('SUPER_ADMIN só pode criar usuários ADMIN');
     }
@@ -48,29 +48,31 @@ export class UsersService {
     const user = await this.repository.create(dto, hashedPassword, pizzeriaId);
 
     return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      pizzeriaId: user.pizzeriaId,
+      message: 'Usuário criado com sucesso',
+      data: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        createdAt: user.createdAt,
+      },
     };
   }
 
-  async findAllByPizzeria(
-    currentUser: User,
-  ): Promise<Omit<User, 'password'>[]> {
+  async findAllByPizzeria(currentUser: User) {
     if (!currentUser.pizzeriaId) {
       throw new ForbiddenException('Usuário não pertence a nenhuma pizzaria');
     }
 
-    return this.repository.findAllByPizzeria(currentUser.pizzeriaId);
+    const users = await this.repository.findAllByPizzeria(currentUser.pizzeriaId);
+
+    return {
+      message: 'Usuários listados com sucesso',
+      data: users,
+    };
   }
 
-  async update(
-    id: string,
-    dto: UpdateUserDto,
-    currentUser: User,
-  ): Promise<Partial<User>> {
+  async update(id: string, dto: UpdateUserDto, currentUser: User) {
     const user = await this.repository.findById(id);
 
     if (!user) {
@@ -97,14 +99,17 @@ export class UsersService {
     const updated = await this.repository.update(id, dto, hashedPassword);
 
     return {
-      id: updated.id,
-      name: updated.name,
-      email: updated.email,
-      role: updated.role,
+      message: 'Usuário atualizado com sucesso',
+      data: {
+        id: updated.id,
+        name: updated.name,
+        email: updated.email,
+        role: updated.role,
+      },
     };
   }
 
-  async remove(id: string, currentUser: User): Promise<void> {
+  async remove(id: string, currentUser: User) {
     const user = await this.repository.findById(id);
 
     if (!user) {
@@ -121,5 +126,7 @@ export class UsersService {
     }
 
     await this.repository.softDelete(id);
+
+    return { message: 'Usuário removido com sucesso' };
   }
 }

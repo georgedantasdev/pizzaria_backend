@@ -3,12 +3,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma, Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
-import { Prisma, Role, Pizzeria } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
-import { PizzeriasRepository } from './repository/pizzerias.repository';
 import { CreatePizzeriaDto } from './dto/create-pizzeria.dto';
 import { UpdatePizzeriaDto } from './dto/update-pizzeria.dto';
+import { PizzeriasRepository } from './repository/pizzerias.repository';
 
 @Injectable()
 export class PizzeriasService {
@@ -24,16 +24,17 @@ export class PizzeriasService {
     const emailExists = await this.prisma.user.findFirst({
       where: { email: dto.admin.email },
     });
-    if (emailExists) throw new ConflictException('E-mail do admin já cadastrado');
+    if (emailExists)
+      throw new ConflictException('E-mail do admin já cadastrado');
 
     const hashedPassword = await bcrypt.hash(dto.admin.password, 10);
 
-    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const pizzeria = await tx.pizzeria.create({
         data: { name: dto.name, document: dto.document },
       });
 
-      const admin = await tx.user.create({
+      await tx.user.create({
         data: {
           name: dto.admin.name,
           email: dto.admin.email,
@@ -41,38 +42,64 @@ export class PizzeriasService {
           role: Role.ADMIN,
           pizzeriaId: pizzeria.id,
         },
-        select: { id: true, name: true, email: true, role: true },
       });
-
-      return { ...pizzeria, admin };
     });
+
+    return { message: 'Pizzaria criada com sucesso' };
+  }
+  async findAll() {
+    const pizzerias = await this.repository.findAll();
+
+    return {
+      message: 'Pizzarias listadas com sucesso',
+      data: pizzerias.map(({ id, name, createdAt, updatedAt }) => ({
+        id,
+        name,
+        createdAt,
+        updatedAt,
+      })),
+    };
   }
 
-  async findAll(): Promise<Pizzeria[]> {
-    return this.repository.findAll();
-  }
-
-  async findOne(id: string): Promise<Pizzeria> {
+  async findOne(id: string) {
     const pizzeria = await this.repository.findById(id);
 
     if (!pizzeria) {
       throw new NotFoundException('Pizzaria não encontrada');
     }
 
-    return pizzeria;
+    return {
+      message: 'Pizzaria encontrada com sucesso',
+      data: {
+        id: pizzeria.id,
+        name: pizzeria.name,
+        createdAt: pizzeria.createdAt,
+        updatedAt: pizzeria.updatedAt,
+      },
+    };
   }
 
-  async update(id: string, dto: UpdatePizzeriaDto): Promise<Pizzeria> {
+  async update(id: string, dto: UpdatePizzeriaDto) {
     const pizzeria = await this.repository.findById(id);
 
     if (!pizzeria) {
       throw new NotFoundException('Pizzaria não encontrada');
     }
 
-    return this.repository.update(id, dto);
+    const updated = await this.repository.update(id, dto);
+
+    return {
+      message: 'Pizzaria atualizada com sucesso',
+      data: {
+        id: updated.id,
+        name: updated.name,
+        createdAt: updated.createdAt,
+        updatedAt: updated.updatedAt,
+      },
+    };
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string) {
     const pizzeria = await this.repository.findById(id);
 
     if (!pizzeria) {
@@ -80,5 +107,7 @@ export class PizzeriasService {
     }
 
     await this.repository.softDelete(id);
+
+    return { message: 'Pizzaria removida com sucesso' };
   }
 }

@@ -3,8 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
   Post,
   Put,
@@ -48,7 +46,6 @@ export class PizzeriasController {
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Deletar pizzaria' })
   async remove(@Param('id') id: string) {
     return this.service.remove(id);

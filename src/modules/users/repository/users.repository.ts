@@ -39,10 +39,7 @@ export class UsersRepository {
         name: true,
         email: true,
         role: true,
-        pizzeriaId: true,
         createdAt: true,
-        updatedAt: true,
-        deletedAt: true,
         password: false,
       },
     });

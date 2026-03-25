@@ -39,7 +39,8 @@ export class JwtAuthGuard implements CanActivate {
         throw new UnauthorizedException('Usuário não encontrado');
       }
 
-      request['user'] = user;
+      const { password: _password, ...safeUser } = user;
+      request['user'] = safeUser;
 
       return true;
     } catch (error) {

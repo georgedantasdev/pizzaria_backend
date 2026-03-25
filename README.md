@@ -24,11 +24,14 @@ Crie um `.env` na raiz:
 ```env
 DATABASE_URL="postgresql://..."
 JWT_SECRET="sua-chave-secreta"
+SUPER_ADMIN_NAME="Administrador"
+SUPER_ADMIN_EMAIL="email"
+SUPER_ADMIN_PASSWORD="senha"
 ```
 
 ```bash
 npx prisma migrate dev
-npm run start:dev
+npm run run dev
 ```
 
 Documentação disponível em `http://localhost:3000/docs`
